@@ -124,6 +124,9 @@ Other controls:
 
 Before we dive into the specifics of the assignment, we want to provide a high-level motivation behind why writing a SVG rasterizer is interesting and worth your time. You might have not realized but SVG images are everywhere when you browse the internet. Rasterization is the process of converting vector graphic to raster graphic, and we can do lots of fancy editing with raster graphic.
 
+![Pipeline](misc/SVG-illustration-2.png)
+To convert vector graphic to raster graphic, there are several steps we need to take in order to paint shapes listed in a SVG file over a grid of pixels. Now we can get into the concrete specifics of the assignment.
+
 ### What You Need to Do
 
 ![Tasks](misc/tasks.png?raw=true)
@@ -234,6 +237,8 @@ When you are done, your solution should be able to correctly render `basic/test2
 
 #### Task 3: Drawing Triangles
 
+![Triangles](misc/SVG-illustration-3.png)
+
 In this task, you will implement `rasterize_triangle()` in `software_renderer.cpp`.
 
 Your implementation should:
@@ -250,6 +255,8 @@ When you are done, you should be able to draw `basic/test3.svg`, `basic/test4.sv
 Note that the vertices may be in counter-clockwise or clockwise order when passed in. Using the cross-product to check orientation may be helpful.
 
 #### Task 4: Anti-Aliasing Using Supersampling
+
+![Supersampling](misc/SVG-illustration-4.png)
 
 **This part of the assignment requires only knowledge of concepts from Lectures _Course Introduction_ and _Drawing a Triangle_.**
 
