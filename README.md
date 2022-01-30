@@ -193,8 +193,8 @@ int sy = (int) floor(y);
 Of course, the code should not attempt to modify the render target buffer at invalid pixel locations.
 
 ```
-if ( sx < 0 || sx > target_w ) return;
-if ( sy < 0 || sy > target_h ) return;
+if ( sx < 0 || sx >= target_w ) return;
+if ( sy < 0 || sy >= target_h ) return;
 ```
 
 If the points happen to be on screen, we fill in the pixel with the RGBA color associated with the point.
@@ -212,7 +212,7 @@ At this time the starter code does not correctly handle transparent points. We'l
 
 #### Task 1: Hardware Renderer
 
-In this task, you will finish implementing parts of the hardware renderer using OpenGL. In particular, you will be responsible for implementing `rasterize_point()`, `rasterize_line()`, and `rasterize_triangle()` in `hardware/hardware_renderer.cpp`. All other OpenGL context has been set up for you outside of these methods, so you only need to use `glBegin()`, `glEnd()`, and appropriate function calls in between those two functions. (You may be interested in `glColor4f()` and `glVertex2f()`, along with `GL_POINTS`, `GL_LINES`, and `GL_TRIANGLES`.) You can find an extensive guide to OpenGL [here](http://altanmesut.trakya.edu.tr/grafik/OpenGL_Programming_Guide.pdf), but feel free to google function names for quick documentation.
+In this task, you will finish implementing parts of the hardware renderer using OpenGL. In particular, you will be responsible for implementing `rasterize_point()`, `rasterize_line()`, and `rasterize_triangle()` in `hardware/hardware_renderer.cpp`. All other OpenGL context has been set up for you outside of these methods, so you only need to use `glBegin()`, `glEnd()`, and appropriate function calls in between those two functions. (You may be interested in `glColor4f()` and `glVertex2f()`, along with `GL_POINTS`, `GL_LINES`, and `GL_TRIANGLES`.) You can find an extensive guide to OpenGL [here](http://altanmesut.trakya.edu.tr/grafik/OpenGL_Programming_Guide.pdf), but feel free to google function names for quick documentation. This will be the only time OpenGL shows up in this assignment so don’t worry too much about going through all of the documentation.
 
 Once you're done, you can test your solution by running DrawSVG and pressing `h`. Your hardware renderer should now be able to correctly render all tests in `basic/` and `alpha/`, and implementing the remaining tasks will add functionality to your software renderer. Remember to compare your render results with the reference, and make sure there are no major visual differences.
 
@@ -232,7 +232,7 @@ When you are done, your solution should be able to correctly render `basic/test2
 
 ##### Possible Extra Credit Extensions:
 
-- (2 pts) If you compare your initial Bresenham results with the reference implementation, you will notice that the reference solution generates smooth lines. For example, you could modify your Bresenham implementation to perform [Xiaolin Wu's line algorithm](https://en.wikipedia.org/wiki/Xiaolin_Wu's_line_algorithm).
+- (2 pts) If you compare your initial Bresenham results with the reference implementation, you will notice that the reference solution generates smooth lines. For example, you could modify your Bresenham implementation to perform [Xiaolin Wu's line algorithm](https://en.wikipedia.org/wiki/Xiaolin_Wu's_line_algorithm). We recommend waiting to implement this after finishing task 8 due to the images looking a bit off compared to the reference without the alpha blending.
 - (2 pts) Add support for specifying a line width.
 
 #### Task 3: Drawing Triangles
@@ -264,7 +264,7 @@ In this task, you will extend your rasterizer to anti-alias triangle edges via s
 
 ![Sample locations](misc/coord_4spp.png?raw=true)
 
-It's reasonable to think of supersampled rendering as rendering an image that is `sample_rate` times larger than the actual output image in each dimension, then resampling the larger rendered output down to the screen sampling rate after rendering is complete. **Note: If you implemented your triangle rasterizer in terms of sampling coverage in screen-space coordinates (and not in terms of pixels), then the code changes to support supersampling should be fairly simple for triangles.**
+It's reasonable to think of supersampled rendering as rendering an image that is sample_rate times larger than the actual output image in each dimension, then resampling the larger rendered output down to the screen sampling rate after rendering is complete. If you take a look at the picture at the start of the “Getting Acquainted with the Starter Code” section, you can get an idea of the structure you should be aiming for. Previously, you might have been going straight to `render_target` to rasterize your lines and triangles, but now you should try to add an intermediate in order to support supersampling. **Note: If you implemented your triangle rasterizer in terms of sampling coverage in screen-space coordinates (and not in terms of pixels), then the code changes to support supersampling should be fairly simple for triangles.**
 
 To help you out, here is a sketch of an implementation:
 
@@ -273,6 +273,7 @@ To help you out, here is a sketch of an implementation:
   - **Don't** add your sample buffer as a member of `SoftwareRenderer`: instead add it to `SoftwareRendererImp`. This is because the pre-compiled reference code relies on the current memory layout of `SoftwareRenderer`.
 - After rendering is complete, your implementation must resample the supersampled results buffer to obtain sample values for the render target. This is often called "resolving" the supersample buffer into the render target. Please implement resampling using a simple [unit-area box filter](https://en.wikipedia.org/wiki/Box_blur).
 - Note that the function `SoftwareRendererImp::resolve()` is called by `draw_svg()` after the SVG file has been drawn. Thus it's a very convenient place to perform resampling.
+- Make sure to remember to clear your sample buffer! Otherwise you may end up with SVG files overlapping each other when you switch between loading images.
 
 When you are done, try increasing the supersampling rate in the viewer, and bask in the glory of having much smoother triangle edges.
 
@@ -294,7 +295,7 @@ In previous lectures we discussed how it is common (and often very useful) to de
 
 Recall that an SVG object consists of a hierarchy of shape elements. Each element in an SVG is associated with a modeling transform (see `SVGElement.transform` in `svg.h`) that defines the relationship between the object's local coordinate space and the parent element's coordinate space. At present, the implementation of `draw_element()`ignores these modeling transforms, so the only SVG objects your renderer has been able to correctly draw were objects that contained only identity modeling transforms.
 
-Please modify `draw_svg()` and `draw_element()` to implement the hierarchy of transforms specified in the SVG object. (You can do this in no more than a few lines of code.) You're also free to add code to `software_renderer.h`, though minimal changes should be necessary for this task.
+Please modify `draw_element()` to implement the hierarchy of transforms specified in the SVG object. (You can do this in no more than a few lines of code.) You're also free to add code to `software_renderer.h`, though minimal changes should be necessary for this task.
 
 When you are done, you should be able to draw `basic/test6.svg`.
 
@@ -326,6 +327,7 @@ To keep things very simple, we are going to constrain this problem to rasterizin
 - In this task, for each covered sample, the color of the image at the specified sample location should be computed using **bilinear filtering** of the input texture. Therefore you should implement `Sampler2D::sample_bilinear()` in `texture.cpp` and call it from `rasterize_image()`. (However, we recommend first implementing `Sampler2D::sample_nearest()` -- as nearest neighbor filtering is simpler and will be given partial credit.)
 - As discussed in class, please assume that image pixels correspond to samples at half-integer coordinates in texture space.
 - The `Texture` struct stored in the `Sampler2D` class maintains multiple image buffers corresponding to a mipmap hierarchy. In this task, you will sample from level 0 of the hierarchy: `Texture::mipmap[0]`. In other words, if you call one of the samplers above, you should pass in `0` for the level parameter.
+- This function should still be able to support supersampling.
 
 When you are done, you should be able to draw `basic/test7.svg`.
 
@@ -351,7 +353,7 @@ Note that in the above link, all the element and canvas color values assume **pr
 
 While the application will always clear the render target buffer to the canvas color at the beginning of a frame to opaque white ((255,255,255,255) in RGBA) before drawing any SVG element, your transparency implementation should make no assumptions about the state of the target at the beginning of a frame.
 
-You will need to modify the parts of the code which write to the supersample buffer.
+You will need to modify all parts of the code which write to the supersample buffer.
 
 When you are done, you should be able to correctly draw the tests in `/alpha`.
 
@@ -361,12 +363,13 @@ Now that you have implemented a few basic features of the SVG format, it is time
 
 You can create an SVG file in popular design tools like Adobe Illustrator or Inkscape and export SVG files, or use a variety of editors online. Since an SVG file is just an XML file, you could even use a text editor or write a script to generate the text!
 
-Be aware that our starter code and your renderer implementation only support a **subset** of the features defined in the SVG specification, and applications like Adobe Illustrator or Inkscape may not always encode shapes with the primitives we support. (You may need to convert complicated paths to the basic primitives in these tools. This [Path to Polygon Converter](https://betravis.github.io/shape-tools/path-to-polygon/) might be of use.)
+Be aware that our starter code and your renderer implementation only support a **subset** of the features defined in the SVG specification, and applications like Adobe Illustrator or Inkscape may not always encode shapes with the primitives we support. (You may need to convert complicated paths to the basic primitives in these tools. This [Path to Polygon Converter](https://betravis.github.io/shape-tools/path-to-polygon/) might be of use. If you are using this website, you might need to inspect the html at svg-result and copy from there in order to get your SVG to work in DrawSVG.)
 
 If you're using InkScape, and you save your drawing in InkScape as an `InkScape` svg or `Plain` svg, the entire drawing will appear black in DrawSVG.
 To work around this, you should instead save it as an `Optimized SVG`. In the resulting dialog, be sure to select `Convert CSS attributes to XML attributes`, and _deselect_ `Shorten color values`.
 
 If you're using Illustrator, and you get errors with opening your generated SVG file in DrawSVG, make sure your `<svg>` tag contains a `width` and `height` field, with set values. Look at the test case SVGs in the `svg/` folder for reference.
+
 
 Please name this file `task9.svg`.
 
