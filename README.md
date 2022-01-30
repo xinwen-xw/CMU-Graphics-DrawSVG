@@ -12,7 +12,7 @@ We will be distributing assignments with git. You can find the repository for th
 $ git clone https://github.com/CMU-Graphics/DrawSVG.git
 ```
 
-This will create a  folder with all the source files.
+This will create a folder with all the source files.
 
 ### Build Instructions
 
@@ -25,6 +25,7 @@ We recommend using [Visual Studio Code](https://code.visualstudio.com/download) 
 The build and launch data is contained within the `.vscode` directory. Select the folder for your compiler and move `launch.json` and `tasks.json` up one level into the `.vscode` directory. To set commandline arguments, go to `launch.json` and add them within `args`. For example, to run the program with test 1, you would add `./basic/test1.svg`. You can build using <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> and debug using <kbd>F5</kbd>. If you feel that your program is running slowly, you can also change the build mode to `Release` from `Debug`.
 
 Commonly used Hotkeys:
+
 - <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> - Build
 - <kbd>F5</kbd> - Debug
   - <kbd>F9</kbd> - Toggle Breakpoint
@@ -34,10 +35,10 @@ Commonly used Hotkeys:
 - <kbd>Ctrl</kbd>+<kbd>P</kbd> - Search for file
 - <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> - Run Command
 - Right click to go to definition/declaration/references
-  
+
 #### OS X/Linux Build Instructions
 
-If you are working on OS X and do not have CMake installed, we recommend installing it through [Homebrew](http://brew.sh/): `$ brew install cmake`.  You may also need the freetype package `$ brew install freetype`.
+If you are working on OS X and do not have CMake installed, we recommend installing it through [Homebrew](http://brew.sh/): `$ brew install cmake`. You may also need the freetype package `$ brew install freetype`.
 
 If you are working on Linux, you should be able to install dependencies with your system's package manager as needed (you may need cmake and freetype, and possibly others).
 
@@ -59,7 +60,7 @@ If you plan on using Visual Studio to debug your program, you can change `drawsv
 
 If you feel that your program is running slowly, you can also change the build mode to `Release` from `Debug` by clicking the Solution Configurations drop down menu on the top menu bar. Note that you will have to set `Command Arguments` again if you change the build mode.
 
-#### Windows Build Instructions Using CLion 
+#### Windows Build Instructions Using CLion
 
 (tested on CLion 2018.3)
 
@@ -72,7 +73,6 @@ Make sure the drop down menu on top right has drawsvg selected (it should say `d
 Fill in Program arguments, say, `./svg/basic`, then click Apply and close the popup
 
 Now you should be able to click on the green run button on top right to run the project.
-
 
 ### Using the Mini-SVG Viewer App
 
@@ -98,25 +98,31 @@ The application will load up to nine files from that path and each file will be 
 
 A table of all the keyboard controls in the **draw** application is provided below.
 
-| Command                                  |  Key  |
-| ---------------------------------------- | :---: |
-| Go to tab                                | 1 ~ 9 |
-| Switch to hw renderer                    |   H   |
-| Switch to sw renderer                    |   S   |
-| Toggle sw renderer impl (student soln/ref soln) |   R   |
+| Command                                           |  Key  |
+| ------------------------------------------------- | :---: |
+| Go to tab                                         | 1 ~ 9 |
+| Switch to hw renderer                             |   H   |
+| Switch to sw renderer                             |   S   |
+| Toggle sw renderer impl (student soln/ref soln)   |   R   |
 | Regenerate mipmaps for current tab (student soln) |   ;   |
-| Regenerate mipmaps for current tab (ref soln) |   '   |
-| Increase samples per pixel               |   =   |
-| Decrease samples per pixel               |   -   |
-| Toggle text overlay                      |   `   |
-| Toggle pixel inspector view              |   Z   |
-| Toggle image diff view                   |   D   |
-| Reset viewport to default position       | SPACE |
+| Regenerate mipmaps for current tab (ref soln)     |   '   |
+| Increase samples per pixel                        |   =   |
+| Decrease samples per pixel                        |   -   |
+| Toggle text overlay                               |   `   |
+| Toggle pixel inspector view                       |   Z   |
+| Toggle image diff view                            |   D   |
+| Reset viewport to default position                | SPACE |
 
 Other controls:
 
 - Panning the view: click and drag the cursor
 - Zooming in and out: scroll wheel (typically a two-finger drag on a trackpad)
+
+### Motivation
+
+![Motivation](misc/SVG-illustration-1.png)
+
+Before we dive into the specifics of the assignment, we want to provide a high-level motivation behind why writing a SVG rasterizer is interesting and worth your time. You might have not realized but SVG images are everywhere when you browse the internet. Rasterization is the process of converting vector graphic to raster graphic, and we can do lots of fancy editing with raster graphic.
 
 ### What You Need to Do
 
@@ -128,15 +134,15 @@ The assignment is divided into nine major tasks, which are described below in th
 
 DrawSVG is made by humans, and will be graded by humans. We are not asking for a pixel-perfect recreation of the reference solution. Floating-point arithmetic on different architectures may lead to subtle inconsistencies that may make your solution a few pixels different than the reference. You should instead aim to have the bigger picture down: lines are in the general same area and thickness, no gaps in triangle fills, etc. It should be clear that if we held the two images together side by side, there shouldn't be a difference to the human eye (we're looking for eye-level differences, not pixel level differences). If you are unsure about grading, feel free to ask on piazza.
 
-Please make sure that your submission builds when submitting to Autolab. Check the assignment details on the course website for instructions on how to tar your files. We will run an autograding script to make sure you've included all the necessary filles and to ensure your program complies on the Gates 5 machines. If you receive  a negative score, Autolab will provide you feedback on what you need to fix in your program before submitting. You have unlimited submissions.
+Please make sure that your submission builds when submitting to Autolab. Check the assignment details on the course website for instructions on how to tar your files. We will run an autograding script to make sure you've included all the necessary filles and to ensure your program complies on the Gates 5 machines. If you receive a negative score, Autolab will provide you feedback on what you need to fix in your program before submitting. You have unlimited submissions.
 
-### Friendly Advice from your TAs 
+### Friendly Advice from your TAs
 
 - As always, start early. There is a lot to implement in this assignment, so don't fall behind!
 - Open `.../DrawSVG/CMU462/docs/html/index.html` with a browser to see documentation of many utility classes, **especially the ones related to vectors and matrices**.
 - Be careful with memory allocation, as too many or too frequent heap allocations will severely degrade performance.
 - Be careful with types (e.g. float, double, int, uint8_t), casting, and using the right functions for each type. Take note of the `uint8_to_float` and `float_to_uint8` functions in `texture.cpp`, which you may find helpful for later tasks.
-- While C has many pitfalls, C++ introduces even more wonderful ways to shoot yourself in the foot. Later assignments will require you to use C++ classes and objects, so take the time to learn the new features C++ introduces. 
+- While C has many pitfalls, C++ introduces even more wonderful ways to shoot yourself in the foot. Later assignments will require you to use C++ classes and objects, so take the time to learn the new features C++ introduces.
 - Currently, DrawSVG does not support rendering `<circle>` svg elements (which is different from `<ellipse>`).
 
 #### Getting Acquainted with the Starter Code
@@ -159,7 +165,6 @@ Most of your work will be constrained to implementing part of the class `Softwar
 Another important method on the `SoftwareRendererImp` class is `set_render_target()`, which provides your code a buffer corresponding to the output image (it also provides width and height of the buffer in pixels, which are stored locally as `target_w` and `target_h`). This buffer is often called the "render target" in many applications, since it is the "target" of rendering commands. **We use the term pixel here on purpose because the values in this buffer are the values that will be displayed on screen.** Pixel values are stored in row-major format, and each pixel is an 8-bit RGBA value (32 bits in total). Your implementation needs to fill in the contents of this buffer when it is asked to draw an SVG file.
 
 `set_render_target()` is called whenever the user resizes the application window.
-
 
 #### A Simple Example: Drawing Points
 
@@ -201,8 +206,6 @@ If the points happen to be on screen, we fill in the pixel with the RGBA color a
 At this time the starter code does not correctly handle transparent points. We'll come back to this later.
 
 **Now that you understand the basics of drawing elements, let's get to work actually drawing more interesting elements than points!**
-
-
 
 #### Task 1: Hardware Renderer
 
@@ -259,8 +262,8 @@ It's reasonable to think of supersampled rendering as rendering an image that is
 To help you out, here is a sketch of an implementation:
 
 - The image being rendered is stored in `render_target`, an array that stores each pixel's color components as an `uint8_t` in rgbargba... order. The width and height in pixels of the `render_target` are stored as `target_w` and `target_h` respectively. Refer to `rasterize_point` to see how it can be modified.
-- When rasterizing primitives such as triangles, rather than directly updating `render_target`, your rasterization should update the contents of a larger buffer (perhaps call it `sample_buffer` or `supersample_target`) that holds the per-super-sample results. It's up to you to manage this buffer yourself. (Hint: See `software_renderer.h` for declarations of helpers used by the reference. The functions `vector::resize()` and `memset()` may be worth looking into.) 
-  - **Don't** add your sample buffer as a member of  `SoftwareRenderer`: instead add it to `SoftwareRendererImp`. This is because the pre-compiled reference code relies on the current memory layout of `SoftwareRenderer`.
+- When rasterizing primitives such as triangles, rather than directly updating `render_target`, your rasterization should update the contents of a larger buffer (perhaps call it `sample_buffer` or `supersample_target`) that holds the per-super-sample results. It's up to you to manage this buffer yourself. (Hint: See `software_renderer.h` for declarations of helpers used by the reference. The functions `vector::resize()` and `memset()` may be worth looking into.)
+  - **Don't** add your sample buffer as a member of `SoftwareRenderer`: instead add it to `SoftwareRendererImp`. This is because the pre-compiled reference code relies on the current memory layout of `SoftwareRenderer`.
 - After rendering is complete, your implementation must resample the supersampled results buffer to obtain sample values for the render target. This is often called "resolving" the supersample buffer into the render target. Please implement resampling using a simple [unit-area box filter](https://en.wikipedia.org/wiki/Box_blur).
 - Note that the function `SoftwareRendererImp::resolve()` is called by `draw_svg()` after the SVG file has been drawn. Thus it's a very convenient place to perform resampling.
 
@@ -354,15 +357,15 @@ You can create an SVG file in popular design tools like Adobe Illustrator or Ink
 Be aware that our starter code and your renderer implementation only support a **subset** of the features defined in the SVG specification, and applications like Adobe Illustrator or Inkscape may not always encode shapes with the primitives we support. (You may need to convert complicated paths to the basic primitives in these tools. This [Path to Polygon Converter](https://betravis.github.io/shape-tools/path-to-polygon/) might be of use.)
 
 If you're using InkScape, and you save your drawing in InkScape as an `InkScape` svg or `Plain` svg, the entire drawing will appear black in DrawSVG.
-To work around this, you should instead save it as an `Optimized SVG`. In the resulting dialog, be sure to select `Convert CSS attributes to XML attributes`, and *deselect* `Shorten color values`.
+To work around this, you should instead save it as an `Optimized SVG`. In the resulting dialog, be sure to select `Convert CSS attributes to XML attributes`, and _deselect_ `Shorten color values`.
 
-If you're using Illustrator, and you get errors with opening your generated SVG file in DrawSVG, make sure your `<svg>` tag contains a `width` and `height` field, with set values. Look at the test case SVGs in the `svg/` folder for reference. 
+If you're using Illustrator, and you get errors with opening your generated SVG file in DrawSVG, make sure your `<svg>` tag contains a `width` and `height` field, with set values. Look at the test case SVGs in the `svg/` folder for reference.
 
 Please name this file `task9.svg`.
 
 #### Going Further: Tasks that May Potentially Win You Extra Credit:
 
-##### Implement More Advanced Shapes 
+##### Implement More Advanced Shapes
 
 We have provided you with a couple of examples of subdividing complex, smooth complex shapes into much simpler triangles in `/subdiv`. Subdivision is something you will dig into in great detail in the next assignment. You can see subdivision in action as you step though the test files we provided.
 
@@ -370,7 +373,7 @@ In addition to what you have implemented already, the [SVG Basic Shapes](http://
 
 ### Resources and Notes
 
-- [Rasterization Rules in Direct3D 11](https://msdn.microsoft.com/en-us/library/windows/desktop/cc627092(v=vs.85).aspx)
+- [Rasterization Rules in Direct3D 11](<https://msdn.microsoft.com/en-us/library/windows/desktop/cc627092(v=vs.85).aspx>)
 - [Rasterization in OpenGL 4.0](https://www.opengl.org/registry/doc/glspec40.core.20100311.pdf#page=156)
 - [Bryce Summer's C++ Programming Guide](https://github.com/Bryce-Summers/Writings/blob/master/Programming%20Guides/C_plus_plus_guide.pdf)
 - [NeHe OpenGL Tutorials Lessons 01~05](http://nehe.gamedev.net/tutorial/lessons_01__05/22004/)
