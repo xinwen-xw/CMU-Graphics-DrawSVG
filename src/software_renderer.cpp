@@ -325,7 +325,26 @@ void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
                                               Color color ) {
   // Task 3: 
   // Implement triangle rasterization
+  int lowerBoundX = (int) floor(std::min({x0, x1, x2}));
+  int upperBoundX = (int) ceil(std::max({x0, x1, x2}));
+  int lowerBoundY = (int) floor(std::min({y0, y1, y2}));
+  int upperBoundY = (int) ceil(std::max({y0, y1, y2}));
 
+  for (int x = lowerBoundX; x < upperBoundX; ++x) {
+    for (int y = lowerBoundY; y < upperBoundY; ++y) {
+      float centerX = x + 0.5;
+      float centerY = y + 0.5;
+      
+      // determine if point is in all three half planes
+      float cross1 = (x1 - x0) * (centerY - y0) - (y1 - y0) * (centerX - x0); 
+      float cross2 = (x2 - x1) * (centerY - y1) - (y2 - y1) * (centerX - x1);
+      float cross3 = (x0 - x2) * (centerY - y2) - (y0 - y2) * (centerX - x2);
+
+      if ( (cross1 >= 0 && cross2 >= 0 && cross3 >= 0) || (cross1 <= 0 && cross2 <= 0 && cross3 <=0 ) ) {
+        rasterize_point(x, y, color);
+      }
+    }
+  }
 }
 
 void SoftwareRendererImp::rasterize_image( float x0, float y0,
