@@ -244,6 +244,79 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
 
   // Task 2: 
   // Implement line rasterization
+  float dx = x1 - x0,
+        dy = y1 - y0;
+
+  if ( dy == 0 ) {
+    for (int x = (int) floor(std::min(x0, x1)); x < std::max(x0, x1); ++x) {
+      rasterize_point(x, y0, color);
+    }
+  } else if ( dx == 0 ) {
+    for (int y = (int) floor(std::min(y0, y1)); y < std::max(y0, y1); ++y) {
+      rasterize_point(x0, y, color);
+    } 
+  } else {
+    float m = dy / dx;
+    if ( m > 0 ) {
+      float stepStart, stepEnd, inc, other, esp = 0;
+      if ( 0 < m && m <= 1 ) {
+        stepStart = x0,
+        stepEnd = x1;
+        other = y0;
+        inc = m;
+      } else {
+        stepStart = y0,
+        stepEnd = y1;
+        other = x0;
+        inc = 1 / m;
+      }
+      if ( stepStart < stepEnd ) {
+        for ( int step = (int) floor(stepStart); step < stepEnd; ++step) {
+          if ( 0 < m && m <= 1 ) {
+            rasterize_point(step, other, color);
+          } else {
+            rasterize_point(other, step, color);
+          }
+          esp += inc;
+          if ( esp >= 0.5 ) {
+            other += 1;
+            esp -= 1;
+          }
+        }
+      } else {
+        rasterize_line(x1, y1, x0, y0, color);
+      }
+    } else {
+      float stepStart, stepEnd, inc, other, esp = 0;
+      if ( 0 > m && m >= -1 ) {
+        stepStart = x0,
+        stepEnd = x1;
+        other = y0;
+        inc = m;
+      } else {
+        stepStart = y0,
+        stepEnd = y1;
+        other = x0;
+        inc = 1 / m;
+      }
+      if ( stepStart < stepEnd ){
+        for ( int step = (int) floor(stepStart); step < stepEnd; ++step) {
+          if ( 0 > m && m >= -1 ) { 
+            rasterize_point(step, other, color);
+          } else {
+            rasterize_point(other, step, color);
+          }
+          esp += inc;
+          if ( esp <= -0.5 ) {
+            other -= 1;
+            esp += 1;
+          }
+        }
+      } else {
+        rasterize_line(x1, y1, x0, y0, color);
+      }
+    }
+  }
 }
 
 void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
