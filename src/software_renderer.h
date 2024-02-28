@@ -80,6 +80,9 @@ class SoftwareRendererImp : public SoftwareRenderer {
 
  private:
 
+   // sample buffer to store per-super-sample results
+  std::vector<unsigned char> sample_buffer;
+
   // Primitive Drawing //
 
   // Draws an SVG element
@@ -131,7 +134,10 @@ class SoftwareRendererImp : public SoftwareRenderer {
                         Texture& tex );
 
   // resolve samples to render target
-  void resolve( void );
+  void resolve( void ); 
+
+  void fill_sample( int sx, int sy, int si, int sj, const Color& c );
+  void fill_pixel( int x, int y, const Color& c );
 
 }; // class SoftwareRendererImp
 

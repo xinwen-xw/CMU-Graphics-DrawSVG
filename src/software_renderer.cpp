@@ -45,7 +45,8 @@ void SoftwareRendererImp::set_sample_rate( size_t sample_rate ) {
   // Task 4: 
   // You may want to modify this for supersampling support
   this->sample_rate = sample_rate;
-
+  this->sample_buffer.resize(4 * (target_w * sample_rate) * (target_h * sample_rate));
+  fill(sample_buffer.begin(), sample_buffer.end(), 255);
 }
 
 void SoftwareRendererImp::set_render_target( unsigned char* render_target,
@@ -56,7 +57,9 @@ void SoftwareRendererImp::set_render_target( unsigned char* render_target,
   this->render_target = render_target;
   this->target_w = width;
   this->target_h = height;
-
+  
+  int supersampling_size = 4 * target_w * target_h;
+  this->sample_buffer = std::vector<unsigned char>(supersampling_size, 255);
 }
 
 void SoftwareRendererImp::draw_element( SVGElement* element ) {
@@ -215,6 +218,32 @@ void SoftwareRendererImp::draw_group( Group& group ) {
 
 }
 
+void SoftwareRendererImp::fill_pixel(int x, int y, const Color& c ) {
+  // check bounds
+  if ( x < 0 || x >= target_w ) return;
+  if ( y < 0 || y >= target_h ) return;
+
+  // fill all samples for the pixel - NOT doing alpha blending!
+  for ( int i = 0; i < sample_rate; ++i ) {
+    for ( int j = 0; j < sample_rate; ++j ) {
+      fill_sample(x, y, i, j, c);
+    }
+  }
+}
+
+void SoftwareRendererImp::fill_sample( int sx, int sy, int si, int sj, const Color& c ) {
+  // check bounds
+  if ( sx < 0 || sx >= target_w ) return;
+  if ( sy < 0 || sy >= target_h ) return;
+
+  int pixels = sx + sy * target_w;
+  int samples = pixels * sample_rate * sample_rate + si + sj * sample_rate;
+  sample_buffer[ 4 * samples ] = (uint8_t) (c.r * 255);
+  sample_buffer[ 4 * samples + 1 ] = (uint8_t) (c.g * 255);
+  sample_buffer[ 4 * samples + 2 ] = (uint8_t) (c.b * 255);
+  sample_buffer[ 4 * samples + 3 ] = (uint8_t) (c.a * 255);
+}
+
 // Rasterization //
 
 // The input arguments in the rasterization functions 
@@ -226,16 +255,16 @@ void SoftwareRendererImp::rasterize_point( float x, float y, Color color ) {
   int sx = (int) floor(x);
   int sy = (int) floor(y);
 
-  // check bounds
-  if ( sx < 0 || sx >= target_w ) return;
-  if ( sy < 0 || sy >= target_h ) return;
+  // // check bounds
+  // if ( sx < 0 || sx >= target_w ) return;
+  // if ( sy < 0 || sy >= target_h ) return;
 
-  // fill sample - NOT doing alpha blending!
-  render_target[4 * (sx + sy * target_w)    ] = (uint8_t) (color.r * 255);
-  render_target[4 * (sx + sy * target_w) + 1] = (uint8_t) (color.g * 255);
-  render_target[4 * (sx + sy * target_w) + 2] = (uint8_t) (color.b * 255);
-  render_target[4 * (sx + sy * target_w) + 3] = (uint8_t) (color.a * 255);
-
+  // // fill sample - NOT doing alpha blending!
+  // render_target[4 * (sx + sy * target_w)    ] = (uint8_t) (color.r * 255);
+  // render_target[4 * (sx + sy * target_w) + 1] = (uint8_t) (color.g * 255);
+  // render_target[4 * (sx + sy * target_w) + 2] = (uint8_t) (color.b * 255);
+  // render_target[4 * (sx + sy * target_w) + 3] = (uint8_t) (color.a * 255);
+  fill_pixel(sx, sy, color);
 }
 
 void SoftwareRendererImp::rasterize_line( float x0, float y0,
@@ -326,22 +355,26 @@ void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
   // Task 3: 
   // Implement triangle rasterization
   int lowerBoundX = (int) floor(std::min({x0, x1, x2}));
-  int upperBoundX = (int) ceil(std::max({x0, x1, x2}));
+  int upperBoundX = (int) floor(std::max({x0, x1, x2}));
   int lowerBoundY = (int) floor(std::min({y0, y1, y2}));
-  int upperBoundY = (int) ceil(std::max({y0, y1, y2}));
+  int upperBoundY = (int) floor(std::max({y0, y1, y2}));
 
   for (int x = lowerBoundX; x < upperBoundX; ++x) {
     for (int y = lowerBoundY; y < upperBoundY; ++y) {
-      float centerX = x + 0.5;
-      float centerY = y + 0.5;
-      
-      // determine if point is in all three half planes
-      float cross1 = (x1 - x0) * (centerY - y0) - (y1 - y0) * (centerX - x0); 
-      float cross2 = (x2 - x1) * (centerY - y1) - (y2 - y1) * (centerX - x1);
-      float cross3 = (x0 - x2) * (centerY - y2) - (y0 - y2) * (centerX - x2);
+      for (int i = 0; i < sample_rate; i++) {
+        for (int j = 0; j < sample_rate; j++) {
+          float centerX = x + (1 / (2 * sample_rate)) * (i * 2 + 1);
+          float centerY = y + (1 / (2 * sample_rate)) * (j * 2 + 1);
+          
+          // determine if point is in all three half planes
+          float cross1 = (x1 - x0) * (centerY - y0) - (y1 - y0) * (centerX - x0); 
+          float cross2 = (x2 - x1) * (centerY - y1) - (y2 - y1) * (centerX - x1);
+          float cross3 = (x0 - x2) * (centerY - y2) - (y0 - y2) * (centerX - x2);
 
-      if ( (cross1 >= 0 && cross2 >= 0 && cross3 >= 0) || (cross1 <= 0 && cross2 <= 0 && cross3 <=0 ) ) {
-        rasterize_point(x, y, color);
+          if ( (cross1 >= 0 && cross2 >= 0 && cross3 >= 0) || (cross1 <= 0 && cross2 <= 0 && cross3 <=0 ) ) {
+            fill_sample(x, y, i, j, color);      
+          }
+        }
       }
     }
   }
@@ -361,8 +394,25 @@ void SoftwareRendererImp::resolve( void ) {
   // Task 4: 
   // Implement supersampling
   // You may also need to modify other functions marked with "Task 4".
-  return;
+  int sample_per_pixel = sample_rate * sample_rate;
 
+  for (int x = 0; x < this->target_w; ++x) {
+    for (int y = 0; y < this->target_h; ++y) {
+      // iterate over rgba, average all samples for the pixel
+      for (int c = 0; c < 4; ++c) {
+        int sum = 0;
+        for (int i = 0; i < sample_rate; ++i) {
+          for (int j = 0; j < sample_rate; ++j) {
+            int pixels = x + y * target_w;
+            int samples = pixels * sample_rate * sample_rate + i + j * sample_rate;
+            sum += sample_buffer[4 * samples + c];
+          }
+        }
+        render_target[4 * (x + y * target_w) + c] = sum / (sample_per_pixel);
+      }
+    }
+  }
+    
 }
 
 
