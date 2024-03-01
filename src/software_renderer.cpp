@@ -15,6 +15,7 @@ namespace CMU462 {
 // Implements SoftwareRenderer //
 
 void SoftwareRendererImp::draw_svg( SVG& svg ) {
+  clear_sample();
 
   // set top level transformation
   transformation = svg_2_screen;
@@ -46,7 +47,6 @@ void SoftwareRendererImp::set_sample_rate( size_t sample_rate ) {
   // You may want to modify this for supersampling support
   this->sample_rate = sample_rate;
   this->sample_buffer.resize(4 * (target_w * sample_rate) * (target_h * sample_rate));
-  fill(sample_buffer.begin(), sample_buffer.end(), 255);
 }
 
 void SoftwareRendererImp::set_render_target( unsigned char* render_target,
@@ -66,6 +66,13 @@ void SoftwareRendererImp::draw_element( SVGElement* element ) {
 
   // Task 5 (part 1):
   // Modify this to implement the transformation stack
+
+  // Push transformation stack 
+  Matrix3x3 transformation_save = transformation;
+
+  // Update transformation
+  transformation = transformation * element->transform;
+
 
   switch(element->type) {
     case POINT:
@@ -96,6 +103,8 @@ void SoftwareRendererImp::draw_element( SVGElement* element ) {
       break;
   }
 
+  // Pop current transformation of the current element
+  transformation = transformation_save;
 }
 
 
@@ -355,9 +364,9 @@ void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
   // Task 3: 
   // Implement triangle rasterization
   int lowerBoundX = (int) floor(std::min({x0, x1, x2}));
-  int upperBoundX = (int) floor(std::max({x0, x1, x2}));
+  int upperBoundX = (int) ceil(std::max({x0, x1, x2}));
   int lowerBoundY = (int) floor(std::min({y0, y1, y2}));
-  int upperBoundY = (int) floor(std::max({y0, y1, y2}));
+  int upperBoundY = (int) ceil(std::max({y0, y1, y2}));
 
   for (int x = lowerBoundX; x < upperBoundX; ++x) {
     for (int y = lowerBoundY; y < upperBoundY; ++y) {
